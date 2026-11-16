@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dinámica de Dispersión de Semillas en las Selvas de Tabasco</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- 1. Pantalla de inicio: activar sonido + scroll para comenzar -->
+  <div id="start-overlay">
+    <!-- Marca de agua repetida de fondo (no interactiva) -->
+    <div id="start-watermark"></div>
+
+    <div id="start-content">
+      <button id="btn-start-sound" class="start-circle" aria-label="Activar sonido y comenzar">
+        <span class="start-text">CLICK<br><small>para activar el sonido</small></span>
+      </button>
+    </div>
+
+    <!-- Indicador de scroll de la pantalla de bienvenida -->
+    <div id="scroll-indicator">
+      <span class="scroll-arrow scroll-arrow-up">▲</span>
+      <span class="scroll-mouse">
+        <span class="scroll-wheel"></span>
+      </span>
+      <span class="scroll-arrow scroll-arrow-down">▼</span>
+      <p class="scroll-text">Desliza para comenzar</p>
+    </div>
+  </div>
+
+  <!-- 2. Contenedor interactivo principal -->
+  <div id="interactive-container">
+    <!-- Reproductor de video de fondo en bucle continuo -->
+    <video id="scene-video" autoplay muted playsinline loop></video>
+
+    <!-- Audio de narración sincronizado -->
+    <audio id="narration-audio" style="display:none;"></audio>
+
+    <!-- Marca de agua fija de DevLab en la esquina superior derecha -->
+    <div id="brand-watermark">
+      <img src="assets/images/logo-devlab.png" alt="Dev Lab">
+    </div>
+
+    <!-- Botón flotante para regresar al Menú Principal (solo visible dentro de historias) -->
+    <button id="btn-back-menu" class="back-menu-btn" title="Volver al Menú Principal">
+      <span class="back-icon">⮌</span>
+      <span class="back-label">Menú Principal</span>
+    </button>
+
+    <!-- Capa SVG para las líneas conectoras de los hotspots en historias -->
+    <svg id="hotspots-lines" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+
+    <!-- Capa para puntos ancla, cajas y paneles informativos de las escenas -->
+    <div id="hotspots-layer"></div>
+
+    <!-- Menú interactivo de la Escena Principal Común: Título central libre y botones sobre los animales -->
+    <div id="animal-menu-container">
+      <!-- Título colocado mero en medio libre de animales -->
+      <div id="center-title-banner">
+        <h1 class="center-title">Dispersión de Semillas en Tabasco</h1>
+        <p class="center-subtitle">Toca a un animal para explorar su dinámica ecológica</p>
+      </div>
+
+      <!-- Botones flotantes transparentes y llamativos colocados estratégicamente sin tapar a los animales -->
+      <div id="animal-hotspots-menu">
+        <!-- 🦜 Periquito Azteca (Eupsittula nana) -->
+        <div class="animal-target target-perico" style="left: 43%; top: 25%;" data-animal="perico">
+          <div class="animal-radar"></div>
+          <button class="animal-btn" aria-label="Ver historia del Periquito Azteca">
+            <span class="btn-emoji">🦜</span>
+            <span class="btn-details">
+              <strong class="btn-name">Periquito Azteca</strong>
+              <small class="btn-fruit">Fruto: Jobo (Spondias mombin)</small>
+            </span>
+          </button>
+        </div>
+
+        <!-- 🐭 Ratón de Campo de Teapa (Peromyscus mexicanus teapensis) -->
+        <div class="animal-target target-raton" style="left: 21%; top: 66%;" data-animal="raton">
+          <div class="animal-radar"></div>
+          <button class="animal-btn" aria-label="Ver historia del Ratón de Campo">
+            <span class="btn-emoji">🐭</span>
+            <span class="btn-details">
+              <strong class="btn-name">Ratón de Campo</strong>
+              <small class="btn-fruit">Fruto: Guayaba (Psidium guajava)</small>
+            </span>
+          </button>
+          <span class="target-pointer" aria-hidden="true">▼</span>
+        </div>
+
+        <!-- 🐒 Mono Araña (Ateles geoffroyi) -->
+        <div class="animal-target target-mono" style="left: 73%; top: 49%;" data-animal="mono">
+          <div class="animal-radar"></div>
+          <button class="animal-btn" aria-label="Ver historia del Mono Araña">
+            <span class="btn-emoji">🐒</span>
+            <span class="btn-details">
+              <strong class="btn-name">Mono Araña</strong>
+              <small class="btn-fruit">Fruto: Cacao (Theobroma cacao)</small>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Indicador de navegación por scroll en las escenas de animales -->
+    <div id="scene-controls">
+      <div id="scene-scroll-icon" title="Usa la rueda del ratón o desliza para cambiar de escena">
+        <span class="scroll-arrow scroll-arrow-up">▲</span>
+        <span class="scroll-mouse-mini">
+          <span class="scroll-wheel-mini"></span>
+        </span>
+        <span class="scroll-arrow scroll-arrow-down">▼</span>
+      </div>
+      <div id="scene-progress-dots"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/scenes.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,896 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #06110d;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+body.dragging-active {
+  cursor: grabbing !important;
+}
+
+/* ===== PANTALLA DE INICIO (activar sonido + scroll) ===== */
+#start-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #020906;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+#start-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#start-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Marca de agua repetida de fondo en la pantalla de bienvenida */
+#start-watermark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('../assets/images/logo-devlab.png');
+  background-repeat: repeat;
+  background-size: 150px auto;
+  background-position: center;
+  opacity: 0.08;
+  z-index: -1;
+  pointer-events: none;
+}
+
+#btn-start-sound {
+  background: none;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.start-circle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 2px solid #34d399;
+  background: rgba(52, 211, 153, 0.06);
+  animation: start-pulse 2.2s infinite;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.start-circle:hover {
+  transform: scale(1.06);
+  background: rgba(52, 211, 153, 0.15);
+}
+
+.start-text {
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  letter-spacing: 1px;
+  text-align: center;
+  line-height: 1.4;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+}
+
+.start-text small {
+  font-weight: normal;
+  font-size: 11px;
+  color: #a7f3d0;
+}
+
+@keyframes start-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+  70% { box-shadow: 0 0 0 22px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+/* Indicador de scroll de la pantalla de bienvenida */
+#scroll-indicator {
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.scroll-arrow {
+  color: #34d399;
+  font-size: 10px;
+  opacity: 0.9;
+  line-height: 1;
+}
+
+.scroll-mouse {
+  width: 26px;
+  height: 42px;
+  border: 2px solid #34d399;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+  margin: 2px 0;
+  background: rgba(6, 17, 13, 0.5);
+}
+
+.scroll-wheel {
+  width: 4px;
+  height: 8px;
+  background: #fff;
+  border-radius: 2px;
+  animation: scroll-wheel-move 1.6s infinite;
+}
+
+@keyframes scroll-wheel-move {
+  0%   { transform: translateY(0);    opacity: 1; }
+  60%  { transform: translateY(14px); opacity: 0.3; }
+  61%  { transform: translateY(0);    opacity: 0; }
+  100% { transform: translateY(0);    opacity: 1; }
+}
+
+.scroll-text {
+  margin-top: 6px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+}
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
+#interactive-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Transición con zoom y desenfoque (sin pantalla negra) */
+#scene-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(0px) brightness(1);
+  transform: scale(1);
+  transition: filter 0.55s ease, transform 0.6s ease;
+  will-change: filter, transform;
+}
+
+#scene-video.scene-blur {
+  filter: blur(22px) brightness(0.82);
+  transform: scale(1.15);
+}
+
+/* Marca de agua fija en esquina superior derecha */
+#brand-watermark {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+#brand-watermark img {
+  display: block;
+  width: 100px;
+  height: auto;
+  opacity: 0.85;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+}
+
+/* ===== BOTÓN VOLVER AL MENÚ (FLOTANTE EN ESQUINA SUPERIOR IZQUIERDA) ===== */
+.back-menu-btn {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(6, 20, 14, 0.76);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(52, 211, 153, 0.35);
+  border-radius: 30px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 12px rgba(52, 211, 153, 0.2);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+.back-menu-btn.btn-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.back-menu-btn:hover {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: #34d399;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.5), 0 4px 22px rgba(0, 0, 0, 0.6);
+  transform: scale(1.05);
+}
+
+.back-icon {
+  font-size: 16px;
+  line-height: 1;
+  color: #34d399;
+  transition: transform 0.25s ease;
+}
+
+.back-menu-btn:hover .back-icon {
+  transform: translateX(-3px);
+}
+
+/* ===== MENÚ DE LA ESCENA COMÚN PRINCIPAL (TRANSPARENTE Y SOBRE CADA ANIMAL) ===== */
+#animal-menu-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 0.45s ease, transform 0.45s ease, visibility 0.45s ease;
+}
+
+#animal-menu-container.menu-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.95);
+  pointer-events: none;
+}
+
+/* Título colocado en medio libre de animales con estética de cristal esmeralda */
+#center-title-banner {
+  position: absolute;
+  left: 47%;
+  top: 58%;
+  transform: translate(-50%, -50%);
+  background: rgba(6, 22, 16, 0.74);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1.5px solid rgba(52, 211, 153, 0.35);
+  border-radius: 20px;
+  padding: 14px 26px;
+  text-align: center;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(16, 185, 129, 0.2);
+  pointer-events: auto;
+  max-width: 340px;
+  width: 90%;
+  animation: banner-float 3.5s ease-in-out infinite;
+}
+
+@keyframes banner-float {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+  50%      { transform: translate(-50%, -50%) translateY(-5px); }
+}
+
+.center-title {
+  font-size: clamp(17px, 2vw, 22px);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), 0 0 14px rgba(52, 211, 153, 0.4);
+}
+
+.center-subtitle {
+  font-size: 12px;
+  color: #a7f3d0;
+  margin-top: 4px;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
+
+/* Contenedor de botones flotantes de animales */
+#animal-hotspots-menu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Contenedor posicionado sobre o junto al animal */
+.animal-target {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Puntero que señala hacia el ratón cuando el botón flota encima */
+.target-pointer {
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #34d399;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.9);
+  animation: pointer-bounce 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pointer-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(4px); }
+}
+
+/* Ondas de radar expansivas en verde esmeralda */
+.animal-radar {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  min-width: 65px;
+  min-height: 44px;
+  border-radius: 40px;
+  border: 2px solid rgba(52, 211, 153, 0.85);
+  animation: animal-radar-pulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes animal-radar-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.95;
+    box-shadow: 0 0 16px rgba(52, 211, 153, 0.7);
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.4;
+    box-shadow: 0 0 25px rgba(52, 211, 153, 0.4);
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+  }
+}
+
+/* Botón transparente de cristal esmerilado con destellos selváticos */
+.animal-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.28), rgba(6, 24, 16, 0.6) 75%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.8px solid rgba(255, 255, 255, 0.88);
+  border-radius: 40px;
+  padding: 6px 15px 6px 10px;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(52, 211, 153, 0.35);
+  animation: animal-btn-glow 2.4s ease-in-out infinite;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+}
+
+/* Destello brillante que recorre el botón diagonalmente */
+.animal-btn::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
+  background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.85) 50%, transparent 60%);
+  transform: translateX(-100%) rotate(12deg);
+  animation: hotspot-shine 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes animal-btn-glow {
+  0%, 100% {
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 0 0 rgba(52, 211, 153, 0.45);
+    border-color: rgba(255, 255, 255, 0.88);
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55), 0 0 16px 4px rgba(52, 211, 153, 0.7);
+    border-color: #34d399;
+  }
+}
+
+.animal-btn:hover {
+  transform: scale(1.15);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.42), rgba(16, 185, 129, 0.3) 75%);
+  border-color: #34d399;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.65), 0 0 25px rgba(52, 211, 153, 0.85);
+}
+
+.btn-emoji {
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7));
+  transition: transform 0.25s ease;
+}
+
+.animal-btn:hover .btn-emoji {
+  transform: scale(1.2) rotate(6deg);
+}
+
+.btn-details {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.btn-name {
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.btn-fruit {
+  color: #fde047; /* Amarillo dorado cálido para destacar frutos */
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+/* ===== HOTSPOTS TIPO CALLOUT EN LAS ESCENAS (LÍNEA + CAJA + PANEL) ===== */
+#hotspots-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+/* Línea conectora estilo láser esmeralda de alta visibilidad */
+.hotspot-line {
+  stroke: #34d399;
+  stroke-width: 0.22;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 4px rgba(52, 211, 153, 0.9));
+}
+
+#hotspots-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+#hotspots-lines.hotspots-hidden,
+#hotspots-layer.hotspots-hidden {
+  opacity: 0;
+}
+
+/* Punto ancla: marca el elemento exacto en el video con núcleo verde brillante */
+.hotspot-anchor {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  background: radial-gradient(circle, #34d399 0%, #059669 70%);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: anchor-pulse 2.2s infinite;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.9);
+  z-index: 3;
+}
+
+@keyframes anchor-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.75); }
+  70% { box-shadow: 0 0 0 15px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+/* Botón de hotspot circular de vidrio con cursor 'grab' para moverlo */
+.hotspot-box {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  line-height: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.28) 70%);
+  border: 1.8px solid rgba(255, 255, 255, 0.9);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 14px rgba(52, 211, 153, 0.4);
+  animation: hotspot-glow 2.6s ease-in-out infinite;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  z-index: 4;
+}
+
+.hotspot-box:active,
+.hotspot-box.is-dragging {
+  cursor: grabbing !important;
+  transform: translate(-50%, -50%) scale(1.18);
+  box-shadow: 0 0 25px rgba(52, 211, 153, 0.9), 0 8px 25px rgba(0, 0, 0, 0.7);
+  border-color: #34d399;
+}
+
+/* Destello que recorre el botón en diagonal */
+.hotspot-box::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 220%;
+  height: 220%;
+  background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.75) 50%, transparent 58%);
+  transform: translateX(-100%) rotate(8deg);
+  animation: hotspot-shine 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes hotspot-shine {
+  0%   { transform: translateX(-100%) rotate(8deg); }
+  40%  { transform: translateX(100%) rotate(8deg); }
+  100% { transform: translateX(100%) rotate(8deg); }
+}
+
+@keyframes hotspot-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45), 0 4px 14px rgba(0,0,0,0.5); }
+  50%      { box-shadow: 0 0 0 12px rgba(52, 211, 153, 0), 0 4px 14px rgba(0,0,0,0.5); }
+}
+
+.hotspot-box:hover {
+  transform: translate(-50%, -50%) scale(1.14);
+  background: radial-gradient(circle at 32% 28%, #ffffff, rgba(255,255,255,0.6) 70%);
+  border-color: #34d399;
+}
+
+/* Estado activo: cuando su panel de información está abierto */
+.hotspot-box.box-active {
+  background: radial-gradient(circle at 32% 28%, #a7f3d0, #059669 75%);
+  border-color: #34d399;
+  transform: translate(-50%, -50%) scale(1.1);
+  animation: hotspot-glow-active 1.8s ease-in-out infinite;
+}
+
+@keyframes hotspot-glow-active {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7), 0 4px 18px rgba(0,0,0,0.5); }
+  50%      { box-shadow: 0 0 0 14px rgba(52, 211, 153, 0), 0 4px 18px rgba(0,0,0,0.5); }
+}
+
+/* ===== PANEL DE INFORMACIÓN SELVA ESMERALDA (CRISTAL TRANSLÚCIDO 72% + DESENFOQUE 20px) ===== */
+.hotspot-panel {
+  position: absolute;
+  z-index: 6;
+  background: linear-gradient(145deg, rgba(7, 24, 18, 0.74) 0%, rgba(3, 14, 10, 0.78) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(52, 211, 153, 0.32);
+  border-radius: 16px;
+  padding: 16px 18px;
+  width: min(320px, 46vw);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 20px 45px rgba(0, 0, 0, 0.65), 0 0 25px rgba(16, 185, 129, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hotspot-panel.panel-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hotspot-panel.is-dragging {
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 30px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(52, 211, 153, 0.4);
+  transform: translate(8%, -50%) scale(1.02);
+  transition: none !important;
+}
+
+/* Alineaciones horizontales por defecto */
+.hotspot-panel.side-right {
+  transform: translate(8%, -50%) scale(0.85);
+  transform-origin: left center;
+}
+.hotspot-panel.side-right.panel-visible {
+  transform: translate(8%, -50%) scale(1);
+}
+
+.hotspot-panel.side-left {
+  transform: translate(-108%, -50%) scale(0.85);
+  transform-origin: right center;
+}
+.hotspot-panel.side-left.panel-visible {
+  transform: translate(-108%, -50%) scale(1);
+}
+
+/* Alineaciones verticales inteligentes para que NUNCA se corten en bordes */
+.hotspot-panel.side-right.valign-top {
+  transform: translate(8%, -6%) scale(0.85);
+  transform-origin: left top;
+}
+.hotspot-panel.side-right.valign-top.panel-visible {
+  transform: translate(8%, -6%) scale(1);
+}
+
+.hotspot-panel.side-left.valign-top {
+  transform: translate(-108%, -6%) scale(0.85);
+  transform-origin: right top;
+}
+.hotspot-panel.side-left.valign-top.panel-visible {
+  transform: translate(-108%, -6%) scale(1);
+}
+
+.hotspot-panel.side-right.valign-bottom {
+  transform: translate(8%, -94%) scale(0.85);
+  transform-origin: left bottom;
+}
+.hotspot-panel.side-right.valign-bottom.panel-visible {
+  transform: translate(8%, -94%) scale(1);
+}
+
+.hotspot-panel.side-left.valign-bottom {
+  transform: translate(-108%, -94%) scale(0.85);
+  transform-origin: right bottom;
+}
+.hotspot-panel.side-left.valign-bottom.panel-visible {
+  transform: translate(-108%, -94%) scale(1);
+}
+
+/* Barra superior de arrastre del panel */
+.panel-drag-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  cursor: grab;
+}
+
+.panel-drag-bar:active {
+  cursor: grabbing;
+}
+
+.drag-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #a7f3d0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: color 0.2s ease;
+}
+
+.panel-drag-bar:hover .drag-hint {
+  color: #34d399;
+}
+
+.drag-icon {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(52, 211, 153, 0.3);
+  padding-bottom: 8px;
+  cursor: grab;
+}
+
+.panel-header:active {
+  cursor: grabbing;
+}
+
+.panel-title {
+  color: #34d399;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.5), 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.panel-close {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a7f3d0;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.panel-close:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
+/* Lista de viñetas con diseño de tarjetas elegantes en verde bosque y borde esmeralda */
+.hotspot-panel ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.hotspot-panel li {
+  position: relative;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #10b981;
+  border-radius: 10px;
+  padding: 8px 12px 8px 28px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #f8fafc;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.hotspot-panel li:hover {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+.hotspot-panel li::before {
+  content: "✦";
+  color: #34d399;
+  font-size: 10px;
+  position: absolute;
+  left: 11px;
+  top: 10px;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.95);
+}
+
+/* ===== CONTROL DE SCROLL Y PROGRESO DE ESCENAS ===== */
+#scene-controls {
+  position: absolute;
+  bottom: 24px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+  pointer-events: none;
+}
+
+#scene-controls.controls-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+#scene-scroll-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.scroll-mouse-mini {
+  width: 22px;
+  height: 34px;
+  border: 2px solid #34d399;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  padding-top: 5px;
+  background: rgba(6, 20, 14, 0.5);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+}
+
+.scroll-wheel-mini {
+  width: 3px;
+  height: 6px;
+  background: #fff;
+  border-radius: 1px;
+  animation: scroll-wheel-move 1.6s infinite;
+}
+
+/* Indicadores de bolitas para el progreso de escenas */
+#scene-progress-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.progress-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  transition: all 0.3s ease;
+}
+
+.progress-dot.dot-active {
+  background: #34d399;
+  transform: scale(1.35);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.9);
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .hotspot-anchor,
+  .hotspot-box,
+  .hotspot-box.box-active,
+  .start-circle,
+  .scroll-wheel,
+  .scroll-wheel-mini,
+  .animal-radar,
+  .animal-btn,
+  .target-pointer {
+    animation: none;
+  }
+  .hotspot-box::after,
+  .animal-btn::after {
+    display: none;
+  }
+}
